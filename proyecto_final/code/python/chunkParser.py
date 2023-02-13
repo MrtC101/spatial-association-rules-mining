@@ -18,12 +18,12 @@ def mcaCSV(csvFile,mcaPath):
     head = "Bid;X;Y;Z;Tag;ChunkX;ChunkZ\n"
     csvFile.write(head)
     for cx in range(0,2):
-        for cz in range(0,9):
+        for cz in range(0,10):
             chunk = anvil.Chunk.from_region(region, cx, cz)
             #get all blocks from chunck
-            for x in range(0,15):
-                for z in range(0,15):
-                    for y in range(0,255):
+            for x in range(0,16):
+                for z in range(0,16):
+                    for y in range(0,256):
                         Bid = x + y + z;
                         blockList.append([Bid,x,y,z,chunk.get_block(x,y,z).id,cx,cz])
             _makeCsv(csvFile,blockList)
