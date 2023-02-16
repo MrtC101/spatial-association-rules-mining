@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 def apriori(T : pd.DataFrame) -> pd.DataFrame:
     """
@@ -49,16 +50,18 @@ def union(A :pd.DataFrame, B : pd.DataFrame) -> pd.DataFrame:
     return C;
 
 def getOneItemSet(T: pd.DataFrame) -> pd.DataFrame:
+    S : pd.DataFrame = T.columns.to_frame();
+    S["supp"] = supp(S,T)
     return 
 
-def supp(S: pd.Series, D: pd.DataFrame):
+def supp(S: pd.DataFrame | list, D: pd.DataFrame) -> np.:
     """
     Pameters:
     ---
     S :pd.Series A Itemset
     D :pd.DataFrame 
     """
-    return card(setFromItemSet(S,D))/card(D);
+    return card(setFromItemSet(S[1],D)) / card(D);
 
 def setFromItemSet(S:, D:):
 
