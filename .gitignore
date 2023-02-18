@@ -8,3 +8,7 @@ proyecto_final/code/__pycache__/
 .vscode/
 proyecto_final/Data/chunks.csv
 proyecto_final/code/python/__pycache__/
+proyecto_final/Data/blockCount.csv
+proyecto_final/Data/chunkBlockCount.csv
+proyecto_final/Data/transactions2x2x2.csv
+proyecto_final/Data/transactions4x4x4.csv
