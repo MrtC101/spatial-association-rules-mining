@@ -27,6 +27,7 @@ def mcaCSV(csvFile,mcaPath):
                         Bid += 1;
                         blockList.append([Bid,x,y,z,chunk.get_block(x,y,z).id,cx,cz])
             _makeCsv(csvFile,blockList)
+            blockList.clear();
 
 def _makeCsv(file,blockList):
     for blockAtts in blockList:

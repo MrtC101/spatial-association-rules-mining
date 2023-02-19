@@ -12,3 +12,6 @@ proyecto_final/Data/blockCount.csv
 proyecto_final/Data/chunkBlockCount.csv
 proyecto_final/Data/transactions2x2x2.csv
 proyecto_final/Data/transactions4x4x4.csv
+proyecto_final/Data/rules20x20.csv
+proyecto_final/Data/rules25x10.csv
+proyecto_final/Data/rules50x80.csv
