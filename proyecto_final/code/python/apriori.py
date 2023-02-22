@@ -12,70 +12,114 @@ def apriori(T : pd.DataFrame,min_supp : float,min_conf: float) -> pd.DataFrame:
     Ck :
     Ct :
     """
-    Llist = [];
-    L: pd.DataFrame = getOneItemSet(T);
-    L = L[supp(L,T) >= min_supp];
+    #1-itemSet
+    L: pd.DataFrame = __getOneItemSet(T);
+    L = L[__supp(L,T) >= min_supp];
+    
+    Llist :list[pd.DataFrame] = [];
     while(len(L) != 0):
-        Ck = apriori_gen(L,T)#new candidate
-        #support
-        L = Ck[supp(Ck,T) >= min_supp]
-        Llist.append(L);
-    #union de todos los L y generacion de reglas
-    result = pd.DataFrame(columns={"itemset","freq"});
-    for L in Llist:
-        for i in range(0,len(L)):
-            result.loc[len(result)] = L.iloc[i,0:len(L.columns)]; 
+        Ck = __apriori_gen(L,T)#new candidate
+        L = Ck[__supp(Ck,T) >= min_supp]
+        if(len(L)>0):
+            Llist.append(L);
+    
+    #union de todos los L
+    itemSets = pd.concat(Llist);
+     
     #Create all the non-void subsets s (s ⊆ l) for each frequent itemsets l.
-    itemsets = result["itemset"].tolist();
-    res= pd.DataFrame(columns=["rule","support","confidence","lift"]);
-    for itemset in itemsets:
-        subitemsets = allSubsets(itemset);
+    columns=["antecedants","=>","consequents","support","confidence","lift"];
+    rows=[];
+    for itemset in itemSets["itemset"].tolist():
+        subitemsets = __subitemset(itemset,k=len(itemset)-1);
         for sub in subitemsets:
             A = sub;
-            B = restaSet(itemset,sub);
-            con = conf(A,B,T);
+            B = __restaSet(itemset,sub);
+            con = __conf(A,B,T);
             if(con >= min_conf):
-                rule =str(A)+"=>"+str(B);
-                sup = support(A,B,T);
+                sup = __support(A,B,T);
                 li = con/sup;
-                res.loc[len(res)] = [rule,sup,con,li];
+                rows.append([str(A),"=>",str(B),sup,con,li]);
+    res = pd.DataFrame(data=rows,columns=columns);
     return res;
 
-# unir, es nesesario?
-def unirSet(A:list,B:list)->list:
-    C = A.copy();
-    for i in A:
-        for j in B:
-            if(i!=j):
-                C.append(j);
-    return C;
-#resta de listas
-def restaSet(A:list,B:list):
-    C = [];
-    for a in A:
-        for b in B:
-            isin = False;
-            if(a == b):
-                isin = True;
-                break;
-        if(not isin):
-            C.append(a)
-    return C
+def __getOneItemSet(T: pd.DataFrame) -> pd.DataFrame:
+    """Generate the 1-itemset."""
+    S : pd.DataFrame = T.columns[2:len(T.columns)].to_frame(name="itemset");
+    #pd.concat([S,pd.Series(map(lambda x: [x],list(S.iloc[:,0])))]);
+    S.iloc[:,0] = list(map(lambda x: [x],list(S.iloc[:,0])));
+    return S;
 
-def apriori_gen(L : pd.DataFrame,T: pd.DataFrame)-> pd.DataFrame:
+def __apriori_gen(L : pd.DataFrame,T: pd.DataFrame)-> pd.DataFrame:
     #1 join L with L
     Ck: pd.DataFrame = pd.DataFrame();
     Lp: pd.DataFrame = L;
     Lq :pd.DataFrame = L.copy();
-    Ck = union(Lp,Lq);
+    Ck = __union(Lp,Lq);
     #2 delete all itemsets c on Ck tal que algunos k-1 subset of c is not in lk-1
     for c in Ck["itemset"]:
-        for s in subSets(c):
-            if(not elementOf(s,L)):
-                Ck = deleteOf(c,Ck);
+        for s in __subitemset(c,k=len(c)-1):
+            if(not __elementOf(s,L)):
+                Ck = __deleteOf(c,Ck);
     return Ck
 
-def freq(S: pd.DataFrame, T: pd.DataFrame)->pd.DataFrame:
+def __union(A :pd.DataFrame, B : pd.DataFrame) -> pd.DataFrame:
+    """Creates a new dataframe that is result of union of each itemset of A with B """
+    C  = pd.DataFrame(columns=["itemset"]);
+    allSet = set();
+    for i in range(0,len(A)):
+        for j in range(0,len(B)):
+            if(i!=j):
+                currSet = set(A.iat[i,0]).union(set(B.iat[j,0]));
+                if(len(currSet) == len(A.iat[i,0])+1):
+                    allSet.add(frozenset(currSet)); 
+    C.loc[:,"itemset"] = list(map(lambda x: list(x),list(allSet)));
+    #pd.concat([C,pd.Series(map(lambda x: [x],list(allSet)))]);
+    return C;
+
+def __deleteOf(a :list,A:pd.DataFrame) -> pd.DataFrame:
+    """Delete itemset form column itemSet"""
+    A = A.drop(A[A.itemset.isin([a])].index);
+    return A;
+
+def __elementOf(a : list,A :pd.DataFrame) -> bool:
+    """Return True if itemset a in in A itemset column"""
+    result = pd.Series([a]).isin(A["itemset"]);
+    return result[0];
+
+def __subitemset(c: list,k : int) -> list:
+    """Resturn the powerset of an itemset without the void set and the hole set"""
+    return __subitemsetRecursive(c,[],k);
+
+def __subitemsetRecursive(c: list,A :list, k: int) -> list:
+    if(len(c) == k):
+        A.append(c);
+    else:
+        for i in range(0,len(c)):
+            newSub = c.copy();
+            newSub.remove(c[i]);
+            __subitemsetRecursive(newSub,A,k);
+        return A;
+
+# unir, es nesesario?
+def __unirSet(A:list,B:list)->list:
+    return list(set(A).union(set(B)));
+
+#resta de listas
+def __restaSet(A:list,B:list):
+    return list(set(A).difference(set(B)))
+
+def __conf(A: list,B: list, D: pd.DataFrame):
+    S = __unirSet(A,B)
+    C = pd.DataFrame(data=[[S]],columns = ["itemset"]);
+    C = __freq(C,D);
+    dfA = pd.DataFrame(data=[[A]],columns = ["itemset"]);
+    dfA = __freq(dfA,D);
+    return (C["freq"]/dfA["freq"])[0];
+
+def __freq(S: pd.DataFrame, T: pd.DataFrame)->pd.DataFrame:
+    """
+    Returns the S dataframe with a new column "freq" that contains the frequency for each itemset.
+    """
     f: list = [];
     for itemset in S.iloc[:,0]:
         A = T.copy();
@@ -85,95 +129,63 @@ def freq(S: pd.DataFrame, T: pd.DataFrame)->pd.DataFrame:
     S["freq"] = f;
     return S;
 
-def subSets(c : list)-> list:
-    power = [];    
-    for i in range(0,len(c)):
-        newSub = c.copy();
-        newSub.remove(c[i])
-        power.append(newSub);
-    return power;
+def __supp(S: pd.DataFrame, D: pd.DataFrame) -> pd.Series:
+    """
+    Calculates the support for each itemset from given transaction datarse.
+    Retorna una serie con el sopporte de cada elemento.
+    """
+    S = __freq(S, D);
+    return S["freq"]/len(D);
+
+def __support(A:list,B:list,D: pd.DataFrame):
+    S = __unirSet(A,B)
+    C = pd.DataFrame(data=[[S]],columns = ["itemset"]);
+    return __supp(C,D)[0];
+
+def plot(rules):
+    import networkx as nx
+    import matplotlib.pyplot as plt 
+    G1 = nx.DiGraph()
+
+    color_map=[]
+    N = 50
+    colors = np.random.rand(len(rules))    
+    names=[]
+
+    for i in range(len(rules)):
+        names.append("R" + str(i));      
+        G1.add_nodes_from(["R" + str(i)],subset= (i % 1)+1)
+        
+        ant = rules.iloc[i]['antecedants'];
+        G1.add_nodes_from([ant],subset=0)
+        G1.add_edge(ant, "R"+str(i), color=colors[i] , weight = 2)
+    
+        con = rules.iloc[i]['consequents'];
+        G1.add_nodes_from([con],subset=11)
+        G1.add_edge("R"+str(i), con, color=colors[i],  weight=2)
+
+    for node in G1:
+        found_a_string = False
+        for item in names: 
+            if node==item:
+                    found_a_string = True
+        if found_a_string:
+                color_map.append('yellow')
+        else:
+                color_map.append('green')       
+
+    edges = G1.edges()
+    colors = [G1[u][v]['color'] for u,v in edges]
+    weights = [G1[u][v]['weight'] for u,v in edges]
 
 
-def allSubsets(c: list) -> list:# un itemset
-    power=[[]];
-    for s in range(1,len(c)):
-        for j in range(len(power)):
-            sub = power[j];
-            currC = c.copy();
-            for el in sub:
-                currC.remove(el);
-            for el in currC:
-                newSub = sub.copy();
-                newSub.append(el);
-                power.append(newSub);
-    power.remove([]);
-    return power
+    #pos = nx.random_layout(G1);
+    pos = nx.arf_layout(G1);
+    #pos = nx.spring_layout(G1)
+    nx.draw(G1, pos,node_color = color_map, edge_color=colors, width=weights, font_size=16, with_labels=False)
+    #, edges=edges, )            
 
-def deleteOf(a,A:pd.DataFrame) -> pd.DataFrame:
-    A = A.drop(A[A.itemset.isin([a])].index);
-    return A;
-
-def elementOf(a : list,A :pd.DataFrame) -> bool:
-    result = pd.Series([a]).isin(A["itemset"]);
-    return result[0];
-
-#arreglar
-def union(A :pd.DataFrame, B : pd.DataFrame) -> pd.DataFrame:
-    C  = pd.DataFrame(columns={"itemset"});
-    for i in range(0,len(A)):
-        for j in range(0,len(B)):
-            if(i!=j):
-                new = A.iat[i,0].copy();
-                for e in B.iat[j,0]:
-                    if sum(list(map(lambda x: x == e,new))) == 0:
-                        new.append(e);
-                if(len(new) == len(A.iat[i,0])+1):
-                    if(isinSet(C.iloc[:,0],new) == False):
-                        C.loc[len(C)] = [new];
-    return C;
-
-#ineficiente n^3
-def isinSet(s: pd.Series,newset: list)->bool:
-    for set in s:
-        for j in range(len(newset)):
-            if(isin(set,newset[j]) == False):
-                break;
-            elif(j == len(newset)-1):
-                return True;
-    return False;
-
-def isin(l :list, e) -> bool:
-    for item in l:
-        if(e == item):
-            return True;
-    return False;
-
-def getOneItemSet(T: pd.DataFrame) -> pd.DataFrame:
-    S : pd.DataFrame = T.columns[2:len(T.columns)].to_frame(name="itemset");
-    for i in range(0,len(S)):
-        new = list();
-        new.append(S.iat[i,0]);
-        S.iat[i,0] = new;
-    return S;
-
-
-def conf(A: list,B: list, D: pd.DataFrame):
-    S = unirSet(A,B)
-    C = pd.DataFrame(columns = ["itemset"]);
-    C.loc[len(C)] = [S];
-    C = freq(C,D);
-    dfA = pd.DataFrame(columns = ["itemset"]);
-    dfA.loc[len(dfA)] = [A]
-    dfA = freq(dfA,D);
-    return (C["freq"]/dfA["freq"])[0];
-
-
-def support(A:list,B:list,D: pd.DataFrame):
-    S = unirSet(A,B)
-    C = pd.DataFrame(columns = ["itemset"]);
-    C.loc[len(C)] = [S];
-    return supp(C,D)[0];
-
-def supp(S: pd.DataFrame, D: pd.DataFrame) -> pd.Series | list:
-    S = freq(S, D);
-    return (S["freq"]/len(D));
+    for p in pos:  # raise text positions
+            pos[p][1] += 0.07
+    nx.draw_networkx_labels(G1, pos)
+    plt.show()

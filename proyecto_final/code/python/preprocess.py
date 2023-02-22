@@ -68,9 +68,9 @@ class Preprocess:
     @staticmethod
     def __amountCloud(ubicationClasses,subsection)->list:
         return []
-    
+
     @staticmethod
-    def customWindowModel(atts : list,D : pd.DataFrame)->pd.DataFrame:
+    def referenceFeatureModel(atts : list,D : pd.DataFrame,attList : list)->pd.DataFrame:
         """
         Parameters:
         ---
@@ -78,31 +78,40 @@ class Preprocess:
         atts : `list` es una lista con los valores del atributo que se pasa a booleano.
         D : `pd.DataFrame` es el dataset de donde se crearan las ventanas
         """
-        location :list = ["es ","izquierda de ","derecha de ","sobre ","debajo ","delante de ","detrás de "];
+        filteredD = pd.DataFrame();
+        for i in range(len(attList)):
+            if i==0:
+                filteredD = D[D["Tag"]==attList[i]];
+            else:
+                filteredD = pd.concat([filteredD,D[D["Tag"] == attList[i]]]);
+            
+        location :list = ["es "," esta a la izquierda de ","esta a la derecha de ","arriba hay ","abajo hay ","delante tiene ","detrás tiene "];
         columns = ["Section","SubSection"];
+        
         for loc in location:
             for att in atts:
                 columns.append(loc + att);
-        Transactions = pd.DataFrame(columns=columns);
-        for cx in list(D.CX.sort_values().unique()):
-            for cz in list(D.CZ.sort_values().unique()):
-                for x in range(0,16):
-                    for z in range(0,16):
-                        for y in range(0,256):
-                            transaction = ["("+str(cx)+","+str(cz)+")","("+str(x)+","+str(y)+","+str(z)+")"] + Preprocess.getAttsRow(cx,cz,x,y,z,D,atts); 
-                            Transactions.loc[len(Transactions)] = transaction;
+        rows:list = list(); 
+        Transactions=pd.DataFrame(columns=columns)
+        for i in range(len(filteredD)):
+            row = filteredD.iloc[i,:];
+            cx = row.CX;
+            cz = row.CZ;
+            x = row.X;
+            y = row.Y;
+            z = row.Z;
+            transaction = ["("+str(cx)+","+str(cz)+")","("+str(x)+","+str(y)+","+str(z)+")"] + Preprocess.getAttsRow(cx,cz,x,y,z,D,atts); 
+            rows.append(transaction);
+            Transactions.loc[len(Transactions)] = transaction;
+            if(i%(math.ceil( len(filteredD)/10)) == 0):
+                print(str(i) + "/" +str(len(filteredD)));
         return Transactions;
     
     @staticmethod 
-    def getAttsRow(cx,cz,x,y,z,blocks,atts):
+    def getAttsRow(cx :int,cz:int,x:int,y:int,z:int,blocks:pd.DataFrame,atts:list)->list:
         row = [];
-        attsS =pd.Series(atts);
-        center =blocks[(blocks.CX == cx) & (blocks.CZ == cz) & (blocks.X == x) & (blocks.Y == y) & (blocks.Z == z)].Tag
-        right = blocks[(blocks.CX == cx) & (blocks.CZ == cz) &(blocks.X == x+1) & (blocks.Y == y) & (blocks.Z == z)].Tag
-        left = blocks[(blocks.CX == cx) & (blocks.CZ == cz) &(blocks.X == x-1) & (blocks.Y == y) & (blocks.Z == z)].Tag
-        up=blocks[(blocks.CX == cx) & (blocks.CZ == cz) &(blocks.X == x) & (blocks.Y == y+1) & (blocks.Z == z)].Tag
-        down=blocks[(blocks.CX == cx) & (blocks.CZ == cz) &(blocks.X == x) & (blocks.Y == y-1) & (blocks.Z == z)].Tag
-        front=blocks[(blocks.CX == cx) & (blocks.CZ == cz) &(blocks.X == x) & (blocks.Y == y) & (blocks.Z == z+1)].Tag
-        behind=blocks[(blocks.CX == cx) & (blocks.CZ == cz) &(blocks.X == x) & (blocks.Y == y) & (blocks.Z == z-1)].Tag
-        row = list(attsS.isin(center)) + list(attsS.isin(right)) + list(attsS.isin(left)) + list(attsS.isin(up)) + list(attsS.isin(down)) + list(attsS.isin(front)) + list(attsS.isin(behind)); 
+        dif = [(0,0,0),(1,0,0),(-1,0,0),(0,1,0),(0,-1,0),(0,0,-1),(0,0,1)];
+        for du in dif:
+            block = blocks[(blocks.CX == cx) & (blocks.CZ == cz) & (blocks.X == x+du[0]) & (blocks.Y == y+du[1]) & (blocks.Z == z+du[2])].Tag;
+            row += list(pd.Series(atts).isin(block));
         return row;
