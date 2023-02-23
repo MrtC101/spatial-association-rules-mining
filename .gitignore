@@ -30,3 +30,7 @@ proyecto_final/Data/rulesTrees50x50.csv
 proyecto_final/Data/transactionsDiamon.csv
 proyecto_final/Data/transactionsGrass.csv
 proyecto_final/Data/transactionsTrees.csv
+proyecto_final/Data/rulesDiamon25x50.csv
+proyecto_final/Data/rulesGrass10x80.csv
+proyecto_final/Data/rulesGrass15x95.csv
+proyecto_final/Data/rulesTrees10x75.csv

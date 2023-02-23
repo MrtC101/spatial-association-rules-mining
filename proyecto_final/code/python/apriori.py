@@ -148,21 +148,24 @@ def plot(rules):
     G1 = nx.DiGraph()
 
     color_map=[]
+    size_map = []
     N = 50
-    colors = np.random.rand(len(rules))    
+    #colors = np.random.rand(len(rules))    
+    colors = ["tab:red","tab:brown"]
     names=[]
-
+    
     for i in range(len(rules)):
         names.append("R" + str(i));      
         G1.add_nodes_from(["R" + str(i)],subset= (i % 1)+1)
         
         ant = rules.iloc[i]['antecedants'];
         G1.add_nodes_from([ant],subset=0)
-        G1.add_edge(ant, "R"+str(i), color=colors[i] , weight = 2)
+        G1.add_edge(ant, "R"+str(i), color=colors[0] , weight = 2)
     
         con = rules.iloc[i]['consequents'];
         G1.add_nodes_from([con],subset=11)
-        G1.add_edge("R"+str(i), con, color=colors[i],  weight=2)
+        G1.add_edge("R"+str(i), con, color=colors[1],  weight=2)
+    
 
     for node in G1:
         found_a_string = False
@@ -170,22 +173,26 @@ def plot(rules):
             if node==item:
                     found_a_string = True
         if found_a_string:
-                color_map.append('yellow')
+                color_map.append('tab:blue')
+                size_map.append(500);
         else:
-                color_map.append('green')       
+                color_map.append('orange')
+                size_map.append(1100);       
 
+    
+    
     edges = G1.edges()
     colors = [G1[u][v]['color'] for u,v in edges]
     weights = [G1[u][v]['weight'] for u,v in edges]
 
-
     #pos = nx.random_layout(G1);
-    pos = nx.arf_layout(G1);
+    pos = nx.arf_layout(G1,scaling=1,a=10);
     #pos = nx.spring_layout(G1)
-    nx.draw(G1, pos,node_color = color_map, edge_color=colors, width=weights, font_size=16, with_labels=False)
+    nx.draw(G1, pos,node_color = color_map, edge_color=colors, width=weights, font_size=16, with_labels=False,node_size=size_map)
     #, edges=edges, )            
 
     for p in pos:  # raise text positions
-            pos[p][1] += 0.07
-    nx.draw_networkx_labels(G1, pos)
+            pos[p][0] += 0.0
+    nx.draw_networkx_labels(G1, pos,font_size=10)
+    plt.figure( figsize=(30,30) );
     plt.show()
