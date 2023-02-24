@@ -117,9 +117,13 @@ Más de talles de estos en [Spatial Data Mining_ Theory and Application_Deren L.
 El  lattice o (también llamado análisis de concepto) es un modelo para espacios grillados.En este contexto lattice hace referencia a una colección regular o irregular de lugares espaciales relacionados entre ci mediante una relación de vecindario. Un diagrama de Hasse simplemente visualiza la relación de generalización entre la intension y la extension de un concepto.  
 Comparado con el Algoritmo Apriori ,el concepto lattice reduce el numero de reglas de asociación redundantes, dando como resultado un mejor rendimiento.
 
+![ConceptLattice](./Images/conceptLattice.png)
+
 2. **Cloud model**  
 En general, el conjunto frecuente de items de reglas de asociación espacial existen a un nivel conceptual alto, is difícil descubrirlas en un nivel conceptual bajo. En particular, cuando el atributo es numérico y la minería es sobre el nivel conceptual original. no se generan fuertes reglas de asociación si el soporte y confianza mínimo son grandes. En este caso los atributos necesitan ser elevándolas un nivel mediante generalización de atributos, y luego las reglas de asociación se deben generar sobre ellos. El modelo nube flexibiliza las particiones de atributos espaciales simulando  el lenguaje humano. Cada atributo es tratado como una variable lingüística.
 Luego de la generalización varias tuplas pueden combinarse si se vuelven idénticas a un nivel conceptual alto, lo cual reduce el tamaño de los datos significativamente. Luego de este preprocesamiento se utiliza el algoritmo *Apriori*.
+
+![CLoudModel](./Images/CloudModel.png)
 
 ### Modelos para el trabajo
 
@@ -131,7 +135,7 @@ Para extraer la información sobre los bloques de Minecraft utilizare la informa
 En la capeta de instalación del videojuego encontramos una carpeta donde se guarda la información cada mundo generado llamada ``saves``. Dentro de la carpeta del mundo encontramos la sub-carpeta ``region``. Esta carpeta contiene varios archivos con formato *.mca*. Los archivos *.mca* tienen un patron de nombramiento que depende de las regiones del juego que se han generado, por cada region generada existe un archivo que contiene la información de 32x32 *chunks*. Siendo *x* y *z* las coordenadas de una región los archivos se nombran como *r.x.z.mca*.
 
 Cada *Chunk* guarda el terreno, las entidades en un area de 16x16x256 donde el ancho y largo es 16 y la altura es 256. Además guarda iluminación precomputalizada, mapas de altura y otra información que no es de nuestro interés. La estructura de los archivos .mca se ve de esta manera:  
-![version 1.14 y 1.10](../../Images/mcacomparation.png)  
+![version 1.14 y 1.10](./Images/mcacomparation.png)  
 *(Se puede apreciar que la diferencia entre los archivos .mca nuevos y viejos no es notable en la estructura general de almacenamiento)*
 
 El terreno que utilizare fue generado por la version 1.10.2 del videojuego. Debido a que la herramienta de [Visualización](http://pessimistress.github.io/minecraft/) funciona con mapas generados en versiones del juego anteriores a la 1.14, y el paseador de archivos *.mca* [Anvil Parser](https://github.com/matcool/anvil-parser) funciona con versiones posteriores a la 1.14. Se genera conflicto con los archivos generados por el videojuego.
@@ -150,38 +154,38 @@ Los demás atributos resultan ser coordenadas rectangulares donde **cx** y **cz*
 
 El mapa en el juego se ve de está manera:
 
-![top_view](../../Images/3d_views/top_view.png)
-![3d_view_right](../../Images/3d_views/3d_view%20right.png)
-![3d_view_left](../../Images/3d_views/3d_view%20left.png)  
+![top_view](./Images/3d_views/top_view.png)
+![3d_view_right](./Images/3d_views/3d_view%20right.png)
+![3d_view_left](./Images/3d_views/3d_view%20left.png)  
 
 Esta parte del mapa tiene algunas particularidades que son notables:
 ![3d_view_river](../../Images/3d_views/3d_view%20river.png)  
 Se puede observar que cruza una pequeña porción de agua que esta rodeada por piedas, arena y grava. Corresponde con una pequeña parte de un río generado en el mapa.   
-![3d_view_woods](../../Images/3d_views/3d_view%20Trees.png)  
+![3d_view_woods](./Images/3d_views/3d_view%20Trees.png)  
 La porción del terreno cubierta con arboles tiene 3 tipos: 
 Los de madera clara son robles, los de madera obscura son arboles de roble obscuro y ademas se pueden observar hongos grandes rojos y uno marron.  
-![3d_view_ores](../../Images/3d_views/3d_view%20ores.png)
-![3d_view_caves](../../Images/3d_views/3d_view%20caves.png)  
+![3d_view_ores](./Images/3d_views/3d_view%20ores.png)
+![3d_view_caves](./Images/3d_views/3d_view%20caves.png)  
 Se pueden que en las capas inferiores pequeñas cuevas y lo que se conoce como una *grieta* en el juego. A mayor profundidad se puede observar mayor cantidad de minerales y bloques distintos a la piedra. En el ultimo nivel se puede ver que están los bloques denominados bedrock que delimitan el final del terreno y no pueden ser traspasados por los jugadores.
 
 ### Lista de tipos de bloques presentes en el conjunto de datos
 
-***DATOS***
+***DATOS***  
 ***IMAGENES***
 
 ### Distribución de los bloques de aire en el mapa
 
-***DATOS***
+***DATOS***  
 ***IMAGENES***
 
 ### Distribución de la lava y el agua en el mapa
 
-***DATOS***
+***DATOS***  
 ***IMAGENES***
 
 ### Distribución de tierra y arboles en el mapa
 
-***DATOS***
+***DATOS***  
 ***IMAGENES***
 
 ## Detección de Outliers o datos espaciales apartados
