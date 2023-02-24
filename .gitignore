@@ -1,6 +1,5 @@
 /proyecto_final/code/java/minecraft_parser/target/
 /Bibliografia/
-/anteproyecto/
 proyecto_final/Data/MCA Selector.lnk
 proyecto_final/Data/MCA_Selector_Setup.exe
 proyecto_final/Data/NBTExplorer-2.8.0.zip
@@ -34,3 +33,6 @@ proyecto_final/Data/rulesDiamon25x50.csv
 proyecto_final/Data/rulesGrass10x80.csv
 proyecto_final/Data/rulesGrass15x95.csv
 proyecto_final/Data/rulesTrees10x75.csv
+anteproyecto/.vscode
+anteproyecto/Bibliografia/
+anteproyecto/Images/AnteproyectoGantt.gan
