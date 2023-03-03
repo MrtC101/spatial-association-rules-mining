@@ -144,7 +144,115 @@ Para solucionar este inconveniente y no crear un visualizador o un parcer nuevo,
 
 Para "parsear" estos archivos y extraer la información de los bloques en un archivo de región utilizaremos la biblioteca **anvil**. Una vez parseado guardaremos el chunk en formato .csv y utilizaremos la biblioteca **pandas** para trabajar y manipular los datos.
 
-## Análisis de Datos de Obtenidos
+## Análisis de las reglas obtenidas
+
+La evaluación de reglas de asociación mediante las métricas **soporte** y **confianza** generalmente decantan en el caso en el que la regla es bien conocida o trivial, o en el caso en el que se generan gran cantidad de variantes de una misma regla con valores similares de confianza y soporte.
+
+En el libro [Data Mining and Knowledge Discovery Handbook] se nos proveen enfoques para atacar este problema:
+
+- **El uso de métricas alternativas**  
+En este postprocesamiento lo que se busca es marcar aquellas reglas que merecen la pena ser investigadas. Si los items $A y $B$ son estadisticamente independientes, la probabilidad ccondicionada es igual a $P(A)P(B)$, de esta manera podriamos marcar aquellas reglas que reglas como interesantes si su soporte se desvia de $P(A)P(B)$.
+$$
+\text{rule-interes}({X}\to{Y})=
+\text{support}({X}\to{Y})
+-
+\text{support}(X)\text{support}(Y)
+$$
+Esta es una métrica similar y alternativa al $lift$.
+La mejor métrica de evaluación es la métrica-J, la cual ranke las reglas por su contenido informativo.
+Considerando $X$ e $y$ como variables aleatorias y $X=x\to Y=y$ como una regla. La métrica-j compara la distribución a priori de X con la distribución a posteriori de $X$ dado $Y=y$ 
+$$
+j(X|Y=y)=
+\sum_{z\in\{x,\bar{x}\}}P(X=z|Y=y)
+\text{log}_2(\frac{P(X=z|Y=y)}{P(X=z)})
+$$
+Cuando se aplica la regla multiples veces la información en promedio es $j(X|Y=y)=P(Y=y-)j(X|Y=y)$. Las reglas altamente infrecuentes no tienen mucha información en promedio, de tal forma que reglas altamente interesantes pero que ocurren raramente no aparecerán en las top-ranked rules.
+
+- **Búsqueda de soporte de reglas y navegación iterativa de reglas**
+
+La decisión final de si una regla es de interés o no las realiza un experto. Para instancias, varias métricas constantemente retornan reglas como las mas interesantes si consisten en un solo item en el consecuente, porque en este caso la confianza se maximiza. Pero el usuario podría no estar interesado en diferentes items o combinación en el consecuente, por eso el interés subjetivo de estas reglas  puede ser bajo en algunas aplicaciones. En efecto, todas las medidas de interés se sustentan en propiedades estadísticas y no tienen en cuenta la información de fondo. El experto toma en cuenta reglas que resultan de interés pero no son distinguibles de las demás por sus métricas.
+
+En (Klemettinen et al., 1994) se proponen las plantillas de reglas, permitiendo al usuario restringir el conjunto de reglas sintéticamente. También se pretenden algunas técnicas de visualización como el grafo.
+
+La idea de (Dong and Li, 1998) es comparar el rendimiento de una regla contra el rendimiento de reglas similares y marcarla como interesante, si esta se desvía claramente de las demás.
+
+Otro enfoque de filtrado se propone en (Liu et al.,1999) donde la correlación estadística es usada para definir direcciones de una regla. De el conjunto de predecesores de una regla, se puede deriva runa dirección esperada, y así marcar la regla si su dirección es diferente.  
+
+La idea entonces es enfocarnos en la vizualizacion de las reglas mediante grafos luego de haber realizado un pruning mediante el método dado en el paper (Liu es al.,1999).
+
+Con todo lo leído y una debida exploración en busca de una manera sensilla de poder analizar las geglas generadas, se llega la conclusion de que se nesesitan 2 cosas. Primero un metodo para la visualizacion de grafos generados a partir de las reglas. Para esto probe primero con la libreria networkX la cual funciona bien pero solo para pequeña cantidad de nodos, En el caso en el que los nodos son mas de 25 comienza a ser dificil de interpretar y manipular. Tambien se vio un enfoque donde se pasaban las reglas en csv a neo4j (una base de datos orientada a grafos) la cual tiene una poderosa herramienta de visualizacion de grafos pero imposible de exportar automaticamente como para generar estas visualizaciones sin nesesidad de interaccion manual. Por ultimo se ve un enfoque donde se utiliza la herramienta Gemphi para la visualizacion de grafos con gran cantidad de aristas y nodos.
+
+Utilizando genhpi y un plugnin llamado genphi stream podemos enviar directamente desde python los datos que queremos crear en genhpi. Finalmente genphi no dio los resultados esperados y optamos por realizar un grafo ,correspondiente para cada conjunto de datos de manera manual. Utilizaresmos los de neo4j.
+
+Lo otro que se nesesita es una manera de reducir la cantidad de reglas redundantes. Para esto utilizaremos los metodos elegidos en (Liu et al.,1999).
+
+## Pruning association rules
+
+La técnica primero realiza un poda sobre las reglas minadas para remover aquellas reglas insignificantes.El conjunto de reglas no podadas se llama *direction settings* (DS) *rules*, y debido a las pruebas en la practica resulta en conjuntos de reglas pequeños.
+
+The **DS rules** da un resumen del comportamiento de las reglas descubiertas. Estas representan las relaciones esenciales del dominio. 
+
+En este framework no utilizamos la confianza minima, aunque es posible.En su lugar utilizamos correlaicon estadistica como base para encontrar reglas que representen las relaciones fundamentales del dominio.
+![Figura que muestra el proceso]()
+
+### Chi-Square Test for Independence and Correlation
+    
+El método $X^2$ como estadístico de prueba es utilizado ampliamente para las pruebas de independencia o correlacion. Escencialmente la prueba $X^2$ esta basada en la comparacion de frecuencias observadas con la correspondiente frecuencia esperada. Mientras más cercana es la frecuencia observada a la esperada mayor es el peso de evidencia en favor de la independencia. Se trata de una prueba de hipótesis donde se utiliza el estadístico de bondad de ajuste.
+
+(Liu et al.,1999) Definitions:
+
+- Definición 1:(correlacionado) Siendo $s$ el soporte mínimo y $c$ el nivel de significacia. $X$ e $y$ de la regla $X \to y$, se dice que $(s,c)$ están correlaciones si se cumplen las siguientes condiciones:
+    1. El soporte $s$ de la regla excede
+    2. El valor $X^2$ para la regla conr especto a el resto de los datos excede el valor $X^2$ a un nivel de $c$.
+
+- Definición 2:(independiente) Siendo $s$ el soporte mínimo y $c$ el nivel de significacia. $X$ e $y$ de la regla $X \to y$, se dice que $(s,c)$ son independientes si se cumple:
+    1. El soporte $s$ de la regla excede
+    2. El valor de $X^2$ para la regla conr especto a el total de los datos no excede el valor $X^2$ a una significaría s.
+
+- Definición 3:(tipo de correlación o dirección)
+    1. Positive correlation: si $X$ e $y$ de una regla r $X\to y$ están correlacionados y $\frac{f_o}{f_e} > 1$, se dice que r tiene correlación positiva, se denota con 1 y decimos que la dirección de r es 1.
+    2. Negative correlation: si $X$ e $y$ de una regla r $X\to y$ están correlacionados y $\frac{f_o}{f_e} < 1$, se dice que r tiene correlación negativa, se denota con -1 y decimos que la dirección de r es -1.
+    3. Independencia: si $X$ e $y$ de una regla r $X\to y$ son independientes,se denota con 0 y decimos que la direccion de r es 0.
+
+### Direction Setting Rules
+
+- Definition 4:(direction setting rule) Una regla r es un $DS$ si satisface las siguientes condiciones:
+    1. Tiene direccion positiva 1
+    2. Su direccion no es un elemento del conjunto de *direcciones esperadas*.
+- Definition 5:(Direcciones esperadas) El conjunto *direcciones esperadas* de una regla r es definido como sigue:
+    1. Si r es 1-condicional, el conjunto esperado de direcciones es {0}.
+    2. Si r es k-condicional rule r ($k > 1$) de la forma:
+        r: $a_1,a_2,...,a_k\to y$
+    el conjunto de direcciones es computarizada como sigue:
+    Vemos a r como una combinaciond e 2 reglas, una regla 1-condicional y una regla ($k-1$)-condicional con el mismo consecuente $y$:
+        $$r_1: a_i \to y  r_{\text{rest}}: a_1,a_2,...,a_k \ to y$$
+    donde $$\{a_1,a_2,...,a_j\}=\{a_1,a_2,...ma_k\}-\{a_i\}$$
+    Las direcciones esperadas para esta combinación, denotada por $b$ y $E_i$ es definida como sigue:
+    1. **Si** ($r_1.dir=r_{\text{rest}}.dir=1$) **entonces** $E_i=1$.
+    2. **Si** ($r_1.dir=o \text{ y } r_{\text{rest}}.dir=1$) **o** ($r_1.dir=1 \text{ y } r_{\text{rest}}.dir=0$) **entonces** $E_i=1$.
+    3. **Si** ($r_1.dir=o \text{ y } r_{\text{rest}}.dir=1$) **o** ($r_1.dir=1 \text{ y } r_{\text{rest}}.dir=0$) **entonces** $E_i=1$.
+    4. **Si** ($r_1.dir=r_{\text{rest}}.dir=0$) **entonces** $E_i=0$.
+    5. **otherwise** $E_i=\text{unknown}$
+
+**Lemma**: All positively correlated 1-condition rules are
+direction setting rules
+La demostración se incluye en (Liu et al.,1999)
+
+### El algoritmo
+
+El algoritmo realiza la poda y la búsqueda de reglas $DS$. Los parámetros de entrada son $F$ y $T$, donde $F$ es el conjunto de reglas de asociación encontradas y $T$ es el valor $X^2$ con un nivel de significaría particular.
+
+Dos puntos importantes: 
+
+1. En la definición de reglas $DS$ y $no-DS$, no se menciono como están relacionadas con el podado. Claramente, aquellas reglas podadas no se incluirán en el conjunto de reglas $DS$ o $no-DS$.
+2. Para el fácil entendimiento el algoritmo se presenta como un método de pos-procesamiento pero puede incluirse durante la generación de reglas.
+
+#### Funcionamiento
+Por cada regla la funcion *compDir* computa el tipo de correlación o direccion para cada regla r.
+Si r es una regla nivel-1 y su dirección es j1 entonces r es una regla $DS$. Si la direccion de r no es 1a, entonces guardamos que r es podada asignando $"\to y"$ r.*prune*.
+La informacion guardad es importante para el posterior podado. r.*prune* es inicializado en 0 e indica si una regla ha sido podada.
+
+## Análisis de Datos de Entrada
 
 A diferencia de el punto de vista de la minería de datos clásica, donde el conjunto de datos esta compuesto columnas llamados Atributos y cada linea llamada transacción, al trabajar con datos espaciales cada linea se interpreta como una entidad u objeto en el espacio y cada columna puede ser un atributo no espacial o un atributo espacial.
 

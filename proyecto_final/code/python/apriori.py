@@ -27,7 +27,7 @@ def apriori(T : pd.DataFrame,min_supp : float,min_conf: float) -> pd.DataFrame:
     itemSets = pd.concat(Llist);
      
     #Create all the non-void subsets s (s ⊆ l) for each frequent itemsets l.
-    columns=["antecedants","=>","consequents","support","confidence","lift"];
+    columns=["antecedants","=>","consequents","support","confidence","lift","frequency","efrequency","Xfrequency","Yfrequency"];
     rows=[];
     for itemset in itemSets["itemset"].tolist():
         subitemsets = __subitemset(itemset,k=len(itemset)-1);
@@ -37,8 +37,12 @@ def apriori(T : pd.DataFrame,min_supp : float,min_conf: float) -> pd.DataFrame:
             con = __conf(A,B,T);
             if(con >= min_conf):
                 sup = __support(A,B,T);
-                li = con/sup;
-                rows.append([str(A),"=>",str(B),sup,con,li]);
+                fr = __Twofrequency(A,B,T);
+                efr = __expectedFrequency(A,B,T);
+                Xfr = __Onefrequency(A,T);
+                Yfr = __Onefrequency(B,T);
+                li = fr / (Xfr*Yfr);
+                rows.append([str(A),"=>",str(B),sup,con,li,fr,efr,Xfr,Yfr]);
     res = pd.DataFrame(data=rows,columns=columns);
     return res;
 
@@ -142,57 +146,22 @@ def __support(A:list,B:list,D: pd.DataFrame):
     C = pd.DataFrame(data=[[S]],columns = ["itemset"]);
     return __supp(C,D)[0];
 
-def plot(rules):
-    import networkx as nx
-    import matplotlib.pyplot as plt 
-    G1 = nx.DiGraph()
+def __Onefrequency(B :list, D:pd.DataFrame)->int:
+    C = pd.DataFrame(data=[[B]],columns = ["itemset"]);
+    E = __freq(C, D);
+    cfr : int = int(E.loc[0,"freq"]);
+    return cfr;
 
-    color_map=[]
-    size_map = []
-    N = 50
-    #colors = np.random.rand(len(rules))    
-    colors = ["tab:red","tab:brown"]
-    names=[]
-    
-    for i in range(len(rules)):
-        names.append("R" + str(i));      
-        G1.add_nodes_from(["R" + str(i)],subset= (i % 1)+1)
-        
-        ant = rules.iloc[i]['antecedants'];
-        G1.add_nodes_from([ant],subset=0)
-        G1.add_edge(ant, "R"+str(i), color=colors[0] , weight = 2)
-    
-        con = rules.iloc[i]['consequents'];
-        G1.add_nodes_from([con],subset=11)
-        G1.add_edge("R"+str(i), con, color=colors[1],  weight=2)
-    
+def __Twofrequency(A,B,D)->int:
+    S = __unirSet(A,B)
+    C = pd.DataFrame(data=[[S]],columns = ["itemset"]);
+    E = __freq(C, D);
+    fr : int = int(E.loc[0,"freq"]);
+    return fr;
 
-    for node in G1:
-        found_a_string = False
-        for item in names: 
-            if node==item:
-                    found_a_string = True
-        if found_a_string:
-                color_map.append('tab:blue')
-                size_map.append(500);
-        else:
-                color_map.append('orange')
-                size_map.append(1100);       
+def __expectedFrequency(A:list,B:list,D: pd.DataFrame)->float:
+    C = pd.DataFrame(data=[[A],[B]],columns = ["itemset"]);
+    E = __freq(C, D);
+    efr : float = float((E.loc[0,"freq"]*E.loc[1,"freq"])/len(D));
+    return efr;
 
-    
-    
-    edges = G1.edges()
-    colors = [G1[u][v]['color'] for u,v in edges]
-    weights = [G1[u][v]['weight'] for u,v in edges]
-
-    #pos = nx.random_layout(G1);
-    pos = nx.arf_layout(G1,scaling=1,a=10);
-    #pos = nx.spring_layout(G1)
-    nx.draw(G1, pos,node_color = color_map, edge_color=colors, width=weights, font_size=16, with_labels=False,node_size=size_map)
-    #, edges=edges, )            
-
-    for p in pos:  # raise text positions
-            pos[p][0] += 0.0
-    nx.draw_networkx_labels(G1, pos,font_size=10)
-    plt.figure( figsize=(30,30) );
-    plt.show()
