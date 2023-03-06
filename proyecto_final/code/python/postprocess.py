@@ -100,7 +100,6 @@ def mostGeneralRule(r : pd.Series)->pd.Series:
     ry.frequency = r.Yfrequency
     ry.Xfrequency = None;
     ry.lift = 1;
-    ry.efrequency = None;
     return ry;
 
 #Quitar reglas no importantes

@@ -20,6 +20,7 @@ def apriori(T : pd.DataFrame,min_supp : float,min_conf: float) -> pd.DataFrame:
     while(len(L) != 0):
         Ck = __apriori_gen(L,T)#new candidate
         L = Ck[__supp(Ck,T) >= min_supp]
+        print("cantidad:"+str(len(L)),";")
         if(len(L)>0):
             Llist.append(L);
     
@@ -27,22 +28,21 @@ def apriori(T : pd.DataFrame,min_supp : float,min_conf: float) -> pd.DataFrame:
     itemSets = pd.concat(Llist);
      
     #Create all the non-void subsets s (s ⊆ l) for each frequent itemsets l.
-    columns=["antecedants","=>","consequents","support","confidence","lift","frequency","efrequency","Xfrequency","Yfrequency"];
+    columns=["antecedants","=>","consequents","support","confidence","lift","frequency","Xfrequency","Yfrequency"];
     rows=[];
     for itemset in itemSets["itemset"].tolist():
         subitemsets = __subitemset(itemset,k=len(itemset)-1);
         for sub in subitemsets:
-            A = sub;
-            B = __restaSet(itemset,sub);
-            con = __conf(A,B,T);
+            X = sub;
+            Y = __restaSet(itemset,sub);
+            con = __conf(X,Y,T);
             if(con >= min_conf):
-                sup = __support(A,B,T);
-                fr = __Twofrequency(A,B,T);
-                efr = __expectedFrequency(A,B,T);
-                Xfr = __Onefrequency(A,T);
-                Yfr = __Onefrequency(B,T);
-                li = fr / (Xfr*Yfr);
-                rows.append([str(A),"=>",str(B),sup,con,li,fr,efr,Xfr,Yfr]);
+                fr = __frequency([X,Y],T);
+                Xfr = __frequency([X],T);
+                Yfr = __frequency([Y],T);
+                sup = fr / len(T);
+                li = con / (Yfr/len(T));
+                rows.append([str(X),"=>",str(Y),sup,con,li,fr,Xfr,Yfr]);
     res = pd.DataFrame(data=rows,columns=columns);
     return res;
 
@@ -141,27 +141,16 @@ def __supp(S: pd.DataFrame, D: pd.DataFrame) -> pd.Series:
     S = __freq(S, D);
     return S["freq"]/len(D);
 
-def __support(A:list,B:list,D: pd.DataFrame):
-    S = __unirSet(A,B)
-    C = pd.DataFrame(data=[[S]],columns = ["itemset"]);
-    return __supp(C,D)[0];
-
-def __Onefrequency(B :list, D:pd.DataFrame)->int:
-    C = pd.DataFrame(data=[[B]],columns = ["itemset"]);
-    E = __freq(C, D);
-    cfr : int = int(E.loc[0,"freq"]);
-    return cfr;
-
-def __Twofrequency(A,B,D)->int:
-    S = __unirSet(A,B)
-    C = pd.DataFrame(data=[[S]],columns = ["itemset"]);
-    E = __freq(C, D);
-    fr : int = int(E.loc[0,"freq"]);
+def __frequency(L : list ,transactionData : pd.DataFrame)->int:
+    unionSet : set = set([]);
+    for l in L:
+        unionSet = set(unionSet).union(set(l));
+    unionList : list= list(unionSet);
+    dataset : pd.DataFrame = pd.DataFrame(data=[[unionList]],columns = ["itemset"]);
+    dataset = __freq(dataset, transactionData)
+    fr : int = int(dataset.loc[0,"freq"]);
     return fr;
 
-def __expectedFrequency(A:list,B:list,D: pd.DataFrame)->float:
-    C = pd.DataFrame(data=[[A],[B]],columns = ["itemset"]);
-    E = __freq(C, D);
-    efr : float = float((E.loc[0,"freq"]*E.loc[1,"freq"])/len(D));
-    return efr;
-
+def getSupports(T : pd.DataFrame) -> pd.Series:
+    L: pd.DataFrame = __getOneItemSet(T);
+    return __supp(L,T);

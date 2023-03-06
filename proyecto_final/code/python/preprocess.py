@@ -155,3 +155,53 @@ class Preprocess:
         h = h-(d*24);
         time : str = str(h)+":"+str(m)+":"+str(s);
         return time;
+
+    @staticmethod 
+    def generalizeBlockTypes(D : pd.DataFrame)->pd.DataFrame:
+        """
+        Return blocks with generalized types
+        """
+        newD = D.copy();
+        newD.replace({
+            "diorite":"igneous_rock",
+            'andesite':'igneous_rock',
+            'granite':'igneous_rock',
+            'oak_log':'tree_log',
+            'dark_oak_log':'tree_log',
+            'spruce_log':'tree_log',
+            'oak_leaves':'tree_leaves',
+            'dark_oak_leaves':'tree_leaves',
+            'spruce_leaves':'tree_leaves',
+            'poppy':'flower',
+            'dandelion':'flower',
+            'peony':'flower',
+            'tall_seagrass':'seagrass',
+            'seagrass':'seagrass',
+            'sand':'sedimentary_stone',
+            'clay':'sedimentary_stone',
+            'gravel':'sedimentary_stone',
+            'red_mushroom_block':'mushroom_block',
+            'brown_mushroom_block':'mushroom_block',
+            'mushroom_stem':'mushroom_block',
+            'oak_planks':"planks_block",
+            'oak_fence':"fence"
+            #'iron_ore':'lowValue_ore',
+            #'coal_ore':'lowValue_ore',
+            #'redstone_ore':'lowValue_ore',
+            #'lapis_ore':'lowValue_ore',
+            #'bedrock' : 
+            #'stone' :
+            #'gold_ore','diamond_ore','emerald_ore'
+            #'grass_block'
+            #'dirt'
+            #'air' 'cave_air'
+            #'lava''water' 
+            #'grass'
+            #'cobweb'
+            #'rail'
+            #'spawner' 'infested_stone' 
+            #'red_mushroom'
+            #'obsidian' 
+            #'sugar_cane'
+            },inplace=True);
+        return newD;
