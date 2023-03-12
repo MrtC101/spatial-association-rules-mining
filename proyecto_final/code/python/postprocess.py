@@ -53,7 +53,8 @@ def chi_square_test(r : pd.Series,R :pd.Series) -> float:
     res = 0;
     for i in range(0,2):
         for j in range(0,2):
-            res+= math.pow(m[i][j] - es[i][j],2) / es[i][j];
+            if(es[i][j] != 0):
+                res+= math.pow(m[i][j] - es[i][j],2) / es[i][j];
     return res;
 
 def evalPrune(r : pd.Series,r_rest : pd.Series,s):

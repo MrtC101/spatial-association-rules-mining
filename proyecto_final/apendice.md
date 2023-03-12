@@ -1,16 +1,29 @@
-# Apendice
+# Apéndice
 
 En este documento se presentan temas relacionados o enfoques planteados que aportan al proyecto.  
 
-## Marco Teórico
+## Indice
 
-##### Podando reglas de asociación
+1. Apéndice Marco Teórico
+    1. Chi-Square Test for Independence and Correlation
+    2. Direction Setting Rules (reglas DS)
+    3. Otros modelos apreciados que se utilizan para la minería de reglas de asociación
+2. Apéndice Diseño Experimental
+    1. Métrica lift
+    2. mca file
+3. Apéndice Resultado
+    1. Detección de Outliers o datos espaciales apartados
+    2. Lista de tipos de bloques presentes en el conjunto de datos
+    3. Grafos de las reglas sin podado
+        1. Transacciones de ventanas de 4x4x4 sin solapamiento
+        2. Atributo de referencia **diamante**
+        3. Atributo de referencia **hojas y troncos**
+        4. Atributo de referencia **pasto**
+        5. Combinación entre los modelos anteriores
 
-Para facilitar la tarea de exploración de reglas de asociación en [Pruning and summarizing the discovered associations] se utiliza la correlación estadística para definir direcciones de una regla, y en función de ellas realizar la poda de reglas. La técnica realiza un poda sobre las reglas minadas para remover aquellas reglas insignificantes. El conjunto de reglas no podadas se llama *direction settings* (DS) *rules*, y debido a las pruebas en la practica, resulta ser un conjuntos de reglas pequeños. Las **reglas DS** da un resumen del comportamiento de las reglas descubiertas. Estas representan las relaciones esenciales del dominio.
+## Apéndice Marco Teórico
 
-![Figura que muestra el proceso](./Images/Informe/prunningProcess.png)
-
-###### Chi-Square Test for Independence and Correlation
+### Chi-Square Test for Independence and Correlation
 
 El método $X^2$ como estadístico de prueba es utilizado ampliamente para las pruebas de independencia o correlación. Esencialmente la prueba $X^2$ esta basada en la comparación de frecuencias observadas con la correspondiente frecuencia esperada. Mientras más cercana es la frecuencia observada a la esperada mayor es el peso de evidencia en favor de la independencia. Se trata de una prueba de hipótesis donde se utiliza el estadístico de bondad de ajuste.
 
@@ -29,7 +42,7 @@ En [Pruning and summarizing the discovered associations] se define:
     2. Negative correlation: si $X$ e $y$ de una regla r $X\to y$ están correlacionados y $\frac{f_o}{f_e} < 1$, se dice que r tiene correlación negativa, se denota con -1 y decimos que la dirección de r es -1.
     3. Independencia: si $X$ e $y$ de una regla r $X\to y$ son independientes,se denota con 0 y decimos que la dirección de r es 0.
 
-###### Direction Setting Rules (reglas DS)
+### Direction Setting Rules (reglas DS)
 
 - Definición 4: (direction setting rule) Una regla $r$ es un $DS$ si satisface las siguientes condiciones:
     1. Tiene dirección positiva 1.
@@ -54,74 +67,6 @@ Las direcciones esperadas para esta combinación, denotada por $E_i$, es definid
 
 **Lemma**: Todos las reglas 1-condicionales que son correlativas son reglas DS. La demostración se incluye en [Pruning and summarizing the discovered associations].
 
-###### El algoritmo
-
-El algoritmo realiza la poda y la búsqueda de reglas $DS$ y $\text{no-DS}$. Los parámetros de entrada son $F$ y $T$, donde $F$ es el conjunto de reglas de asociación encontradas y $T$ es el valor $X^2$ con un nivel de significaría particular.
-
-Dos puntos importantes:
-
-1. En la definición de reglas $DS$ y $\text{no-DS}$, no se menciono como están relacionadas con el podado. Claramente, aquellas reglas podadas no se incluirán en el conjunto de reglas $DS$ o $no-DS$.
-
-2. Para el fácil entendimiento el algoritmo se presenta como un método de pos-procesamiento pero puede incluirse durante la generación de reglas.
-
-![Algoritmo de Poda](./Images/Informe/PruneAlgorithm.png)  
-
-![evalDir](./Images/Informe/compDirAlgorithm.png)  
-
-![compDir](./Images/Informe/evalPruneAlgorithm.png)  
-
-Se puede encontrar una detallada descripción del algoritmos en [Pruning and summarizing the discovered associations].
-
-##### Funcionamiento
-
-El algoritmo procesa las reglas descubiertas nivel por nivel, desde el nivel 1 al nivel n (donde n es la cantidad de atributos en el antecedente de una regla). Por cada regla r en un nivel particular el algoritmo hace lo siguiente:
-
-La función compDir computa el tipo de correlación (o dirección) de la regla r dado dos reglas r y R, en la linea 2 R = “→ y” ya que esto equivale a comparar r con todas las demás reglas del conjunto $F$.
-
-Si r es de nivel 1 y su correlación es positiva se incluye en DS sino se poda y guardamos la regla  r es podado po "→ y". (esta información puede ser de ayuda para el experto)
-
-En la linea 6 se procesa r utilizando todo par de ancestros $r_1$ y $r_\text{rest}$.
-En la linea 7 si r ya se ha podado no puede ser parte del cojunto DS, entonces se salta el bucle.
-
-En la linea 8, si no se sale del bucle, se realiza la evaluación de poda en el método evalPrune.
-En la linea 10-21, si no se ha podado r en linea 8, pasa a verificar si la regla pertenece a DS o no-DS evaluando todas las combinaciones de direcciones o correlaciones entre cada para r_1 r_rest.
-
-y en caso de que r pertenezca al conjunto DS r.justify escribe los conjuntos (r_1,r_rest) que justifican su pertenencia.
-
-Luego de completar el bucle for, si r.justify ≠ ∅, r pertenece a las reglas DS. Sin embargo, si r puede ser podada, entonces no es parte de las reglas DS. r.dir = undefined para que después r pueda ser utilizado como una regla que justifique otra. Si r no puede ser podada entonces es una regla DS. Todas las demás reglas no podadas y que no están en DS son parte del conjunto no-DS.
-
-Procedure compDir (Figure 7) uses the χ2 test to
-compute the correlation or direction of r. R is an ancestor
-rule of r and both have the same consequent.
-Procedure compDir(r, R, T)
-1 if χ2(r, R) > T then
-2 if r.sup > r.cover * (R.sup / R.cover) then
-3 return(1)
-4 else return(-1)
-5 else return(0)
-Figure 7. Computing the direction or correlation of a rule r
-against a more general rule R
- 
-En la linea 1, si χ2(r, R) > T, se rechaza la asumpción de independencia.
-En la linea 2-5, determina el tipo de correlación o dirección.
-“r.cover*(R.sup/R.cover)” Es la frecuencia esperada y  x.cover es el numero de transacciones donde se satisface el antecedente de r.
-
-La función evalPrune intenta podar r utilizando r_rest.
-En linea 1, si r_rest en si misma ha sido podada previamente. Entonces, el algoritmo necesita encontrar la regla que podo a r_rest. Esto se muestra en la linea 2. En la linea 3 y 4, si r no representa una correlación positiva, se poda. 
-Se establece r.prune= r_rest para proveer un enlace a la poda de reglas de mayor nivel que r. 
-En la linea 5, si r tiene correlación positiva , entonces se intenta comparar con r_rest utilizando la prueba chi cuadrada. Si r no muestra correlación positiva, con el subconjunto de datos cubierto por r_rest es entonces podada por r_rest.
-
-Procedure evalPrune(r, rrest)
-1 if rrest.prune ≠ 0 then /* If rrest has been pruned */
-2 rrest = rrest.prune;
-3 if r.dir ≠ 1 then
-4 r.prune = rrest
-5 elseif compDir(r, rrest) ≠ 1 then /* r is not significant
-compared to rrest */
-6 r.prune = rrest /* r can be pruned */
-Figure 8. Evaluating pruning of a rule r with respect to its
-ancestor rule rrest
-
 ### Otros modelos apreciados que se utilizan para la minería de reglas de asociación  
 
 1. **Event centric model**  
@@ -145,23 +90,17 @@ ancestor rule rrest
 
     ![CLoudModel](./Images/Informe/CloudModel.png)
 
-## Diseño Experimental
+## Apéndice Diseño Experimental
 
 ### Metrica Lift
 
-- Sustentación: El indicador lift expresa cuál es la proporción del soporte observado de un conjunto de productos respecto del soporte teórico de ese conjunto dado el supuesto de independencia. Un valor de $lift = 1$ indica que ese conjunto aparece de independencia. Un valor de $lift > 1$ indica que ese conjunto aparece una cantidad de veces superior a lo esperado bajo condiciones de independencia.. Un valor de $lift < 1$ indica que ese conjunto aparece una cantidad de veces inferior a lo esperado bajo condiciones de independencia.
+- Sustentación: El indicador lift expresa cuál es la proporción del soporte observado de un conjunto de productos respecto del soporte teórico de ese conjunto dado el supuesto de independencia. Un valor de $lift = 1$ indica que existe independencia estadística entre el antecedente y el consecuente. Un valor de $lift > 1$ indica que ese conjunto aparece una cantidad de veces superior a lo esperado bajo condiciones de independencia. Un valor de $lift < 1$ indica que ese conjunto aparece una cantidad de veces inferior a lo esperado bajo condiciones de independencia.
 
 $$
 Lift({X}\to{Y})  = \dfrac{Confidence({X}\to{Y})}{Support(Y)}
 $$
 
-### Obtención de los datos del Videojuego
-
-Para extraer la información sobre los bloques de Minecraft utilizare la información brindada por esta pagina web : [Minecraft Region file format](https://minecraft.fandom.com/wiki/Region_file_format).  
-
-En la capeta de instalación del videojuego encontramos una carpeta donde se guarda la información cada mundo generado llamada ``saves``. Dentro de la carpeta del mundo encontramos la sub-carpeta ``region``. Esta carpeta contiene varios archivos con formato *.mca*. Los archivos *.mca* tienen un patron de nombramiento que depende de las regiones del juego que se han generado, por cada region generada existe un archivo que contiene la información de 32x32 *chunks*. Siendo *x* y *z* las coordenadas de una región los archivos se nombran como *r.x.z.mca*.
-
-Cada *Chunk* guarda el terreno, las entidades en un area de 16x16x256 donde el ancho y largo es 16 y la altura es 256. Además guarda iluminación precomputalizada, mapas de altura y otra información que no es de nuestro interés. 
+### mca file
 
 La estructura de los archivos .mca se ve de esta manera:  
 ![version 1.14 y 1.10](./Images/Informe/mcacomparation.png)  
@@ -173,9 +112,9 @@ Para solucionar este inconveniente y no crear un visualizador o un parcer nuevo,
 
 Para "parsear" estos archivos y extraer la información de los bloques en un archivo de región utilizaremos la biblioteca **anvil**. Una vez parseado guardaremos el chunk en formato .csv y utilizaremos la biblioteca **pandas** para trabajar y manipular los datos.
 
-## Resultados
+## Apéndice Resultados
 
-## Detección de Outliers o datos espaciales apartados
+### Detección de Outliers o datos espaciales apartados
 
 Un *dato espacial aparatado* es un objeto especialmente referenciado cuyos atributos no-espaciales tienen valores que difieren significativamente de aquellos otros objetos que son vecinos. El análisis de datos aparatados resulta importante para el descubrimiento de patrones en los datos espaciales.
 
@@ -201,6 +140,29 @@ Lista de tipos de bloque:
 
 Claramente se aprecia en el gráfico que se trata de un conjunto de datos desbalanciados ya que los bloques de aire, piedra y tierra tienen frecuencias mucho más altas que todos los otros tipos, es de esperarse entonce que el soporte soporte de las reglas generadas a partir de estos tipos sean muy altos.
 
+### Grafos de las reglas sin podado
+
+#### Transacciones de ventanas de 4x4x4 sin solapamiento
+
+![Grafo de reglas obtenidas](./Images/Graphs/windowsRulesGeneralGraph.png)  
+
+#### Atributo de referencia **diamante**
+
+![Grafo de reglas obtenidas](./Images/Graphs/diamonRulesGeneralGraph.png)  
+
+#### Atributo de referencia **hojas y troncos**
+
+![Grafo de reglas obtenidas](./Images/Graphs/treesGeneralGraph.png)  
+
+#### Atributo de referencia **pasto**
+
+![Grafo de reglas obtenidas](./Images/Graphs/grassRulesGeneralGraph.png)  
+
+#### Combinación entre los modelos anteriores
+
+![Grafo de reglas obtenidas](./Images/Graphs/chunkRulesGeneralGraph.png)  
+
+------------------------------------------------------------------------------------------------------------------
 #### Window centirc model
 
 ##### Transacciones de ventanas de 4x4x4 sin solapamiento
@@ -277,10 +239,10 @@ En las cuatro esquinas se puede ver que están los items [delante tiene stone], 
 En este caso las reglas que tienden a representar el resto de las reglas son 4 todas con una confianza alta y un lift que indica una correlación positiva. Estas reglas nos indican que existe una relación o patrón fuerte entre el diamante y la piedra,
 
                             antecedants      =>    consequents   support  confidence      lift 
-0            ['detrás tiene diamond_ore']  ['=>']  ['delante tiene stone']  0.253333    0.791667  1.696429
-1               ['abajo hay diamond_ore']  ['=>']  ['arriba hay stone']  0.186667    0.823529  1.470588
-2  ['esta a la izquierda de diamond_ore']  ['=>']  ['esta a la derecha de stone']  0.240000    0.857143  1.648352 
-3           ['delante tiene diamond_ore']  ['=>']  ['detrás tiene stone']  0.253333    0.791667  1.562500 
+    0            ['detrás tiene diamond_ore']  ['=>']  ['delante tiene stone']  0.253333    0.791667  1.696429
+    1               ['abajo hay diamond_ore']  ['=>']  ['arriba hay stone']  0.186667    0.823529  1.470588
+    2  ['esta a la izquierda de diamond_ore']  ['=>']  ['esta a la derecha de stone']  0.240000    0.857143  1.648352 
+    3           ['delante tiene diamond_ore']  ['=>']  ['detrás tiene stone']  0.253333    0.791667  1.562500 
 
 ![Grafo de las non-DS](./Images/Graphs/diamondnonDSGraph.png)
 
@@ -364,20 +326,5 @@ Por lo tanto generaremos las transaccione para todos los bloques con ventanas ti
 
 La cantidad minima de patrones que se necesitaran para considerarlo valido es **200**.
 
-![Grafo de reglas obtenidas](./Images/Graphs/chunkRulesGeneralGraph.png)  
 
 Se ven un cluster donde se relacionan los items con bloques de aire, por otro lado los que se relacionan con bloques de piedra, un cluster relacionado a las igneous_rocks (arena,arcilla o grava) y otro gran cluster relacionado con tierra.
-
-![Grafo de las DS rules](./Images/Graphs/chunkDSGraph.png)  
-
-En este caso se mantienen 3 clusters que muestra el patrón que indica:
-
-- Que el aire tiende a estar rodeado de más aire Este patrón tiende a aparecer una enorme cantidad de veces (por eso ese cluster es un tipo todos contra todos).
-- Que la piedra esta rodeada de más piedra
-- y que la tierra esta rodeada de tierra o tiene bloques de pasto encima.
-
-Esta información no es novedosa y explica muy poco respecto a todos los patrones que existen en un chunk del mapa Minecraft.
-
-![Grafo de las non-DS](./Images/Graphs/chunknonDSGraph.png)
-
-Se puede correr apriori con un soporte mínimo mucho menor al que se ha dado pero el tiempo de ejecución crece mucho.
