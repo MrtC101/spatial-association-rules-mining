@@ -399,8 +399,6 @@ Fig.26 -  Grafo que representa las reglas clasificadas en el conjunto $DS$.
 
 El grafo **Fig.26** ilustra las reglas del conjunto $DS$ que es el resultado del post-procesamiento. Estás son las reglas que representan y dan dirección a la mayoría de las demás reglas que se encuentran en non-DS rules. El análisis resulta sencillo en este grafo.
 
-Claramente estás reglas no se encuentran en el conjunto de reglas $DS$ pero sí representan bien todas las posibles variaciones que pueden formarse (varios de ellos se encuentran en el conjunto no-$DS$).
-
 Observando las primeras reglas podemos ver que la confianza es muy alta en todas pero el soporte no necesariamente. Esto se interpreta como que el consecuente ocurre muy frecuentemente cuando el antecedente se cumple pero ambos antecedente y antecedente ocurre poco frecuentemente juntos en la misma venta. (De todas maneras el soporte es tan bajo debido a la enorme cantidad de bloques y lo desbalanceado que se encuentra el conjunto de bloques). Sin embargo, podemos asegurar que cada una de estás reglas ocurre al menos 100 veces o más.
 
     id           antecedants      =>      consequents   support  confidence  
@@ -426,12 +424,12 @@ Observando las primeras reglas podemos ver que la confianza es muy alta en todas
 
 Fig.27 - Reglas de DS graficadas en Fig.26  
 
-- En este conjunto se encuentran todas las demás reglas que podrían ser relevantes aunque su análisis nos revelaría que las reglas son combinaciones de todas las reglas anteriores.
-
 ![Grafo de las non-DS](./Images/Graphs/windowsnonDSGraph.png)  
 Fig.28 - Grafo que representa las reglas en no-$DS$.  
 
-- Aun asi no hay que desmerecer la importancia de los patrones que pueden hallarse en este grafo aunque sean de difícil interpretación debido a su cantidad.
+- En este conjunto se encuentran todas las demás reglas que podrían ser relevantes aunque su análisis nos revelaría que las reglas son combinaciones de todas las reglas anteriores. En este caso no nos revelan mayor información que las reglas en DS.
+
+- Aun asi no hay que desmerecer la importancia de los patrones que pueden hallarse en este grafo, estas reglas podrián darnos más detalles respecto a las que están en DS.
 
 Cabe destacar que existen patrones que ocurren menos de 100 veces y que resultan importantes por ejemplo
 
