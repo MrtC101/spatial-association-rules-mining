@@ -378,16 +378,14 @@ Fig.24 - Frecuencia de nuevas categorías de tipos de bloque.
 
 ## Resultados
 
-### Window centirc model
-
-#### Transacciones de ventanas de 4x4x4 sin solapamiento
+### Transacciones de ventanas de 4x4x4 sin solapamiento
 
 `tiempo de preprocesamiento`= 9 minutos  
 `total de transacciones` = 20480  
 `soporte mínimo` = 100/20480 = 0.0049  
 `confianza mínima` = 90%
 
-Las transacciones para en este caso son ventanas de 4x4x4 es decir cubos de 64 bloques.  
+Las transacciones implementan un **Window centirc model** y en este caso son ventanas de 4x4x4 es decir cubos de 64 bloques.  
 
 ***En este experimento mostramos las reglas generadas directamente como salida del Algoritmo Apriori para contemplar su dificultad de análisis en los próximos lo omitiremos***
 
@@ -449,9 +447,9 @@ Transacciones con ventanas de la forma cruz con 7 bloques, se pueden visualizar 
 ![Cruz](./Images/Informe//Croos.png)  
 Fig.29 - Diagrama que muestran la forma que tienen las ventanas "Cruz".  
 
-Con este tipo de modelado de transacciones podemos obtener reglas que tienen una forma más cercana a las reglas que esperamos generar.
+Todos los experimentos a continuación implementan un Reference feature centric model. Con este tipo de modelado de transacciones podemos obtener reglas que tienen una forma más cercana a las reglas que esperamos generar.
 
-#### Atributo de referencia **diamante**
+### Atributo de referencia **diamante**
 
 `tiempo de preprocesamiento`= 9 segundos  
 `total de transacciones` = 75  
@@ -480,7 +478,7 @@ En el conjunto de reglas DS solo tenemos 4 presentes y todas ilustran un patrón
 
 Una vez que hemos reconocido este patrón si miramos las reglas del conjunto no-DS en la **Fig.32** no encontraremos reglas que describan otro patrón distinto que el que ya se ha mencionado.
 
-#### Atributo de referencia **hojas y troncos**
+### Atributo de referencia **hojas y troncos**
 
 `tiempo de preprocesamiento`= 24 minutos  
 `total de transacciones` = 11531  
@@ -520,7 +518,7 @@ Aunque es engorroso de la **Fig.35** pueden inferirse el patrón:
 
 - **Los bloques de tipo tronco pueden estar rodeados de bloques de aire o rodeados por bloques de hoja o bloques de tronco.**
 
-#### Atributo de referencia **pasto**
+### Atributo de referencia **pasto**
 
 `tiempo de preprocesamiento`= 6 minutos  
 `total de transacciones` = 4108
@@ -556,7 +554,7 @@ Estos patrones son correctos y fácilmente identificables en el juego.
 
 También, podemos decir que el patrón donde arriba de una grass_block aparecen flores tiene una frecuencia muy pequeña como para que aparezca en las reglas que hemos generado, pero aún así se trata de un patrón totalmente válido y no descubierto. Esto nos hace replantear si realmente estamos tomando un acercamiento correcto al problema.
 
-#### Combinación entre los modelos anteriores
+### Combinación entre los modelos anteriores
 
 `tiempo de preprocesamiento`= 13 minutos y 30 segundos  
 `total de transacciones` = 65536

@@ -1,4 +1,4 @@
-# spatial-association-rules-mining
+# Minería de reglas de asociación espacial sobre Minecraft
 
 Proyecto de inteligencia Artificial I de la facultad de Ingeniería Uncuyo cursado 2022.
 
